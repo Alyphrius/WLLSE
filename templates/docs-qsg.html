@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Functionality - Docs - WebLLSE</title>
+        
+
+<script src="{{ url_for('static', filename='format1.js') }}" ></script>
+<style>
+        body {
+            font-family: sans-serif;
+            background: #ffffff;
+            padding: 20px;
+        }
+
+        .headlabel, .subhdlabel, .deschead {
+            color: #000000;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+        }
+
+        .headlabel {
+            font-size: 30px;
+        }
+
+        .subhdlabel {
+            font-size: 25px;
+        }
+
+        .deschead {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .hline, .shline {
+            width: 50%;
+        }
+
+        .desc {
+            color: #000000;
+            font-size: 18px;
+            font-family: monospace;
+        }
+
+        ul {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+    </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/topbarstyle.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/documentinfo.css') }}">
+
+
+</head>
+<body>
+
+    <h1 class="headlabel">Documentation</h1>
+    <hr class="hline">
+    <div class="desc">
+        The following is a short guide on how to start making sound. For a more comprehensive description of how the synth works, see the Core page.
+    </div>
+    <h1 class="subhdlabel">Quick Start Guide</h1>
+    <hr class="shline">
+    <div class="descgroup">
+        <div class="desc">
+            To create the most basic sound, a pure sine wave tone at 440 Hz, click "+Addend" to add a wave instance. Then, you can click "+Mixer Track" to add a mixer track, which is what sends the waves through the effect chains and to the output (audio buffer played by your speakers). You can change the ID field to anything, or leave it the way it is. Then, in the Mixer Track field on the wave instance, type in the ID of this mixer track. Click and hold on any key on the virtual piano keyboard, or use your physical typing keyboard, to play the sound.
+            <br>
+            If you followed these steps exactly, the pitch of the sound is always A4 and does not change, since the frequency is set to 440 (A4) by default. To set the frequency to the frequency of the note being played, enter the global variable <code>$F#</code> in the frequency field. When a key is pressed, F is set to its note's frequency. All variables are wrapped in $ and # in fields.
+            Multiply F by a power of 2 (e.g. 0.25, 0.5, 1, 2) to pitch the frequency up or down any number of octaves, where frequency <code>$F# * (2**n)</code> is <code>$F#</code> raised by <code>n</code> octaves.
+            <br>
+            Set the amplitude to 1 for maximum volume. Amplitude can technically go above 1, but this may introduce clipping or distortion.
+            <br>
+            You can do the above for any wave instance you add. You do not need to add a separate mixer track for every wave unless you want different effects for each one. If you decide to add effects, click "+Effect Object" to create one. A dropdown menu will appear for you to select the effect. Each mixer track has its own effects that it applies to every wave sent to it, and you specify these effects by typing in their IDs in order, separated by hyphens, with 'e!' before everything (e.g. a gain effect has an ID of 'g' and downsampling with an ID of 'd', and you want the sound sent to the gain then the downsampling, so the chain would be "<code>e!g-d</code>").
+            <br>
+            <br>
+            If you have a number or value that is used for multiple different properties, but when you need to change it you don't want to change it every time it comes up, you can assign it to a variable by clicking "+Variable" then typing it in as the value. Everywhere that number or value must be used in, type the variable's ID wrapped in '$' and '#' in its place. A variable can also be a graphed modulator, which allows you to edit a graph of its value over time, or an effect chain, which allows you to efficiently reuse a specific chain of effects for multiple mixer tracks.
+        </div>
+
+        <div class="deschead">
+            
+        </div>
+        
+    </div>
+</body>
+</html>
+<!DOCTYPE html>
+

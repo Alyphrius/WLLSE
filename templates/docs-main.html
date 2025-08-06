@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Functionality - Docs - WebLLSE</title>
+        
+
+<script src="{{ url_for('static', filename='format1.js') }}" ></script>
+<style>
+        body {
+            font-family: sans-serif;
+            background: #ffffff;
+            padding: 20px;
+        }
+
+        .headlabel, .subhdlabel, .deschead {
+            color: #000000;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+        }
+
+        .headlabel {
+            font-size: 30px;
+        }
+
+        .subhdlabel {
+            font-size: 25px;
+        }
+
+        .deschead {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .hline, .shline {
+            width: 50%;
+        }
+
+        .desc {
+            color: #000000;
+            font-size: 18px;
+            font-family: monospace;
+        }
+
+        ul {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+        .pagelink2 {
+
+        }
+    </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/topbarstyle.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/documentinfo.css') }}">
+
+
+</head>
+<body>
+
+    <h1 class="headlabel">Documentation</h1>
+    <hr class="hline">
+    <div class="desc">
+       This is the homepage for WebLLSE's documentation. Read the pages to learn about the program.
+        <br>
+        <br>
+        <br>
+        <ul>
+            <li><a href="/docs/core" class="pagelink2">Core</a></li>
+            <li><a href="/docs/guide" class="pagelink2">Quick Start Guide</a></li>
+        </ul>
+       
+    </div>
+    
+    <hr class="shline">
+    <div class="descgroup">
+        <div class="desc">
+           </div>
+
+        <div class="deschead">
+            
+        </div>
+        
+    </div>
+</body>
+</html>
+<!DOCTYPE html>
+

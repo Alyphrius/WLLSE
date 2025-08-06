@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Functionality - Docs - WebLLSE</title>
+        
+
+<script src="{{ url_for('static', filename='format1.js') }}" ></script>
+<style>
+        body {
+            font-family: sans-serif;
+            background: #ffffff;
+            padding: 20px;
+        }
+
+        .headlabel, .subhdlabel, .deschead {
+            color: #000000;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+        }
+
+        .headlabel {
+            font-size: 30px;
+        }
+
+        .subhdlabel {
+            font-size: 25px;
+        }
+
+        .deschead {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .hline, .shline {
+            width: 50%;
+        }
+
+        .desc {
+            color: #000000;
+            font-size: 18px;
+            font-family: monospace;
+        }
+
+        ul {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+    </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/topbarstyle.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/documentinfo.css') }}">
+
+
+</head>
+<body>
+
+    <h1 class="headlabel">Documentation</h1>
+    <hr class="hline">
+    <h1 class="subhdlabel">Core</h1>
+    <hr class="shline">
+    <div class="descgroup">
+        <div class="desc">
+            LLSE is a web-based synthesizer program that allows flexible, unique control over the sound at a lower level than many other synthesizer programs. 
+            <br>
+            The following is a more comprehensive description of how the synthesizer works. For a shorter guide on how to start creating sound, see the quick start guide.
+            
+        </div>
+        <div class="deschead">
+            Elements
+        </div>
+        <hr class="shline">
+        <div class="desc">
+            The synth consists of four primary elements, each with parameters.
+            <ul>
+                <li><strong>Addend (a.k.a. wave instance)</strong> <br>This is the first element that controls oscillation signals and shapes. For each addend, the system will read its data, determine the wave, and send it through the mixer. Each addend is added together (synthesized) after being passed through the mixer to create the final sound. Addends have optional parameters called "multiplicative modifiers" that clone the wave repeatedly.</li>
+                <ul>
+                    <li><strong>Waveform</strong> - This is the shape of the wave.</li>
+                    <li><strong>Frequency (Hz)</strong> - This is the base frequency of the wave and can be a math expression or number.</li>
+                    <li><strong>Amplitude (0-1)</strong> - This is the amplitude of the wave and can be a math expression.</li>
+                    <li><strong>Panning (-1-1)</strong> - This is the left/right panning of the wave. 100% left = -1, 100% right = 1, 50% left/right = 0</li>
+                    <li><strong>Mixer Track</strong> - This is the mixer track that the instance is sent to.</li>
+                    <li><strong>Multiplicative Modifiers</strong> - These are operations that clone the wave for each value of the variable, beginning at "start", increasing by "step" until greater than "end" (this iteration is excluded).</li>
+                    <ul>
+                        <li><strong>Variable</strong> - This is the local variable, treated as an ID. For each value it has, the wave instance is cloned. It can be used only within its wave instance.</li>
+                        <li><strong>Start</strong> - The value of the variable on the first iteration; the starting value.</li>
+                        <li><strong>Step</strong> - The number added to the variable each iteration; the change in the variable's value.</li>
+                        <li><strong>End</strong> - The value of the variable at the last iteration, or that the variable surpasses at the last iteration; the ending value of the variable, unless end minus start is not a multiple of step.</li>
+                    </ul>
+                    
+                </ul>
+                <li><strong>Variable</strong> - This is a reusable value that can be used within all parameters in the synthesizer that allow math expressions as values (wave frequency, gain value, etc.).</li>
+                <ul>
+                    <li><strong>ID</strong> - The identifier of the variable to typed into math expressions. All variables must have a unique ID.</li>
+                    <li><strong>Value</strong> - The value of the variable. Either a math expression, code for modulator (starts with g!), or an effect chain (starts with e!)</li>
+                    <li><strong>Type</strong> - The type of variable, either expression, graphed modulator, or effect chain.</li>
+                </ul>
+                <li><strong>Mixer Track</strong> - This is a bus or combiner that takes all wave instances sent to it, combines them, sends them collectively through the effect chain, then sends them to output.</li>
+                <ul>
+                    <li><strong>Effect Chain</strong> - The effect chain that the waves are sent through.</li>
+                </ul>
+                <li><strong>Effect Object</strong> - This applies extra processing to the input of waves, which can include gain, distortion, and other operations. It is a reference to effect functionality and not a bus, meaning the audio is not actually sent into the effect object and out, but rather the effect object signals to the system what to do to the audio.</li>
+                <ul>
+                    <li><strong>ID</strong> - The identifier of the effect, used to refer to it in effect chain parameters (in mixer tracks or variables). This must be unique across all effects.</li>
+                    <li>Other parameters vary based on the type of effect.</li>
+                </ul>
+            </ul>
+        </div>
+        <div class="deschead">
+            Interface
+        </div>
+        <hr class="shline">
+        <div class="desc">
+           <br>
+            The synthesizer consists of six core windows: the instance/addend window, variable window, addend property editor, graphed modulator editor, effect list, and mixer. A virtual keyboard is included at the bottom.
+            <br>
+            <br>
+            A wave instance can be added by clicking the "+Addend" button on the bottom left.
+            <br>
+            Similarly, clicking "+Variable" inserts a variable, "+Effect Object" inserts an effect, and "+Mixer Track" inserts a mixer track.
+            <br>
+            <br>
+            There are also four main parameter inputs above the virtual keyboard.
+            <ul>
+                <li>
+                    The first output parameter is the start time in seconds of the sound when a note is pressed. It is not how long the program waits to play the sound, it is how far into the sound it starts. Default value is 0. Changing this is usually not required but can be helpful for creating certain sounds.
+
+                </li>
+                <li>The second output parameter is the absolute end time in seconds of the sound (not how long after the start time it ends). Changing this is obviously required for longer release, longer possible holding times, etc.</li>
+                <li>The third output parameter is the block size. This refers to how many samples are created when generating the sound before updating the registered values (if there are any parameters dependent on time) and rendering the next block with those new values. This value is what affects loading times the most. Value can be between 1 and the sample rate multiplied by duration. A smaller block size (e.g. 1) means that at any given time in the sound, every variable, effect, and all other parameters dependent on the time variable are accurately at the values they should be at that time, however the audio takes significantly longer to generate before playing. A large block size (e.g. half the sample rate, 22050 if SR is 44100), means that for the first 0.5 seconds, the note sounds the same, then every time-dependent parameter is updated to its accurate value and kept there for the next 0.5 seconds, and so on.</li>
+                <li>The fourth output parameter is the voice count, which directly refers to how many notes can be played on the keyboard at a time.</li>
+
+            </ul>
+        </div>
+         <div class="deschead">
+            Variables and Expressions
+        </div>
+        <hr class="shline">
+        <div class="desc">
+           <br>
+            Most values used in the synthesizer are represented by mathematical expressions (which can include single numbers).
+            <br>
+            JavaScript is used to parse math expressions, so its syntax should be used. The parser follows the order of operations, in ascending level order, with everything with a given level number being evaluated left to right:
+            <ul>
+                <li>1: Variables: <code>$var#</code>. All variables are substituted into the expression first.</li>
+                <li>
+                    2: Parentheses, library functions: <code>(), func().</code> <br> <code>Math.pow(), Math.sqrt()</code>, etc are included here since they are library functions, even though they are functionally exponentiation or other operation types.
+                </li>
+                <li>3: Exponentiation: <code>**</code></li>
+                <li>4: Multiplication, Division, Modulus: <code>*, /, %</code></li>
+                <li>5: Addition, Subtraction: <code>+, -</code></li>
+                
+            </ul> 
+            <br>
+            Math expressions can include variables, which are externally defined. All variables in all expressions are used by wrapping the ID in between a '$' to the left and '#' to the right (e.g. <code>5 + 2 * $x#</code>). This applies to all variable types.
+            <br>
+            A variable may either be a standard expression, graphed modulator, or an effect chain.
+            <br>
+            Graphed modulator variables contain non-mathematical expressions that represent the waypoints and control points of a graph of a value versus time, up to the maximum time. Graphed modulator variables are evaluated based on this data, and the data can be controlled in the graph editor to the right of the variable list. The graph is a path of cubic Bezier curves, controlled by main points (connectors) and control points (changing the slopes of the curves.).
+            <br>
+            Graphed modulator data includes the prefix 'g!' followed by braces ({}). The data inside the braces is conveniently structured as a JavaScript dictionary, containing the coordinates for each main and control point.
+            <br>
+            If a variable is an effect chain, its value simply includes the prefix 'e!', followed by the IDs of the effects of the chain, in the order that they should be applied, and separated by a hyphen (-). Effect object IDs are not wrapped in $ and #, but effect chain variable IDs referenced in other expressions are.
+        </div>
+    </div>
+</body>
+</html>
+<!DOCTYPE html>
+
