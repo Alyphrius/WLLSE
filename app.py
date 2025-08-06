@@ -11,17 +11,17 @@ from googleapiclient.http import MediaIoBaseDownload
 load_dotenv()
 
 # Path to your service account key file
-info = json.loads(os.environ['GOOGLE_CREDENTIALS'])
+# info = json.loads(os.environ['GOOGLE_CREDENTIALS'])
 
-creds = service_account.Credentials.from_service_account_info(
-    info,
-    scopes=["https://www.googleapis.com/auth/drive.readonly"]
-)
+# creds = service_account.Credentials.from_service_account_info(
+#     info,
+#     scopes=["https://www.googleapis.com/auth/drive.readonly"]
+# )
 
-drive_service = build('drive', 'v3', credentials=creds)
-FOLDER_ID = '190UY56-VYS5Tzmd_u8GAO5XRQk6upp54'
+# drive_service = build('drive', 'v3', credentials=creds)
+# FOLDER_ID = '190UY56-VYS5Tzmd_u8GAO5XRQk6upp54'
 
-query = f"'{FOLDER_ID}' in parents and trashed = false"
+# query = f"'{FOLDER_ID}' in parents and trashed = false"
 # results = drive_service.files().list(
 #     q=query,
 #     fields="files(id, name, mimeType)"
@@ -47,31 +47,31 @@ app.static_folder = 'static'
 
 @app.route('/files')
 def list_files():
-    folder_id = FOLDER_ID
-    results = drive_service.files().list(
-        q=query,
-        fields="files(id, name)"
-    ).execute()
-    files = results.get('files', [])
+    # folder_id = FOLDER_ID
+    # results = drive_service.files().list(
+    #     q=query,
+    #     fields="files(id, name)"
+    # ).execute()
+    # files = results.get('files', [])
     
-    file_contents = []
-    for file in files:
-        file_id = file['id']
-        file_name = file['name']
-        # Download file content
-        request = drive_service.files().get_media(fileId=file_id)
-        fh = io.BytesIO()
-        downloader = MediaIoBaseDownload(fh, request)
-        done = False
-        while done is False:
-            status, done = downloader.next_chunk()
-        content = fh.getvalue().decode('utf-8')
-        file_contents.append({
-            'name': file_name,
-            'content': content
-        })
+    # file_contents = []
+    # for file in files:
+    #     file_id = file['id']
+    #     file_name = file['name']
+    #     # Download file content
+    #     request = drive_service.files().get_media(fileId=file_id)
+    #     fh = io.BytesIO()
+    #     downloader = MediaIoBaseDownload(fh, request)
+    #     done = False
+    #     while done is False:
+    #         status, done = downloader.next_chunk()
+    #     content = fh.getvalue().decode('utf-8')
+    #     file_contents.append({
+    #         'name': file_name,
+    #         'content': content
+    #     })
     
-    return jsonify(file_contents)
+    return jsonify("")
 
 
 
@@ -82,3 +82,4 @@ def index():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
