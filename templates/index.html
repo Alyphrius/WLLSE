@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LLSE</title>
+  <title>Synth - WebLLSE</title>
   <style>
     body {
       font-family: sans-serif;
@@ -11,32 +11,34 @@
       padding: 20px;
     }
 
-    #container {
+    
+    .leftboxcontainer {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-width: 700px;
-      margin-left: 50px;
+      /* max-width: 700px; */
+      
       padding-right: 10px;
       overflow-y: auto;
       height: 250px;
       background-color:#252525;
       border: 2px solid #ffffff;
-      width:700px;
+      width:100%;
     }
     #wfedit {
       display: flex;
       flex-direction: column;
-      max-width:300px;
-      width:300px;
+      /* max-width:300px; */
+      /* width:300px; */
       height:300px;
       background-color:#252525;
       border: 2px solid #ffffff;
       margin-left:10px;
+      width:100%;
       
     }
-    #variablecon {
-      margin-top: 5vh;
+    /* #variablecon {
+      
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -48,7 +50,7 @@
       background-color:#252525;
       border: 2px solid #ffffff;
       width:700px
-    }
+    } */
     .titlething {
       color: #ffffff;
       border: 1px solid white;
@@ -58,28 +60,28 @@
     }
     .wave-rect {
       background: #3b3b3b;
-      border: 1px solid #43586b;
-      padding: 15px;
+      border: 1px solid #0084ff;
+      padding: 10px;
       border-radius: 0px;
       display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      flex-direction: row;
+      gap: 5px;
+      flex-wrap:wrap;
+      flex-direction:row;
       align-items: center;
-      height: 130px;
-      max-height: 400px;
+      /* height: 100px; */
+      /* max-height: 800px; */
     }
     .var-rect {
       background: #3b3b3b;
-      border: 1px solid #43586b;
-      padding: 15px;
+      border: 1px solid #003cff;
+      padding: 10px;
       border-radius: 0px;
       display: flex;
-      gap: 15px;
+      gap: 5px;
       flex-wrap: wrap;
       flex-direction: row;
       align-items: center;
-      height: 40px;
+      
     }
     .wr-modifier {
       max-width: 10vh;
@@ -88,19 +90,22 @@
       background: #0f0f0f;
     }
 
-    .wave-rect > input[type="text"] {
-      width: 60px;
-      max-width:60px;
+    /* .wave-rect > input[type="text"] {
+      width: 50%;
+      
       height: 40px;
       padding: 5px;
-    }
+    } */
+     .waveinp {
+      width:45%;
+     }
     .var-name-input {
-      width: 30px;
+      width: 20%;
       height: 20px;
       padding: 5px;
     }
     .var-value-input {
-      width: 400px;
+      width: 100%;
       height: 20px;
       padding: 5px;
     }
@@ -127,6 +132,32 @@
       margin: 1px 1px 0 0;
       background-color: #000000;
       color: white;
+    }
+    #fxcontainer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 700px;
+      margin-left: 10px;
+      padding-right: 10px;
+      overflow-y: auto;
+      height: 500px;
+      background-color:#1a1a1a;
+      border: 2px solid #ffffff;
+      width:20vw;
+    }
+    #mixtrackcontainer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 700px;
+      margin-left: 10px;
+      padding-right: 10px;
+      overflow-y: auto;
+      height: 500px;
+      background-color:#1a1a1a;
+      border: 2px solid #ffffff;
+      width:20vw;
     }
   
 .keyboard {
@@ -190,6 +221,13 @@
 #wrap1 {
   display: flex;
   min-height:65vh;
+  width:100vw;
+  /* margin-left: 50px; */
+}
+#wrap2 {
+  display:flex;
+  flex-direction:column;
+  width:25vw;
 }
 .label1 {
   width:100%;
@@ -246,8 +284,8 @@
 }
 #modgraphc {
   display: flex;
-  height: 200px;
-  width: 300px;
+  height: 100%;
+  width: 100%;
   background-color: #000000;
   margin-left: 10px;
   border: 2px solid #ffffff;
@@ -271,13 +309,196 @@
   font-size: 20px;
   color:#fff
 }
+.fxinstance {
+  display:none;
+  flex-direction: column;
+  width:100%;
+  height:300px;
+  background-color:#000000;
+  border: 1px solid #00ff00
+  
+}
+.fxibodyname {
+  display:flex;
+  width:90%;
+  height:30px;
+  background-color:#2b2b2b;
+  color:#ffffff;
+  text-align:center;
+  justify-content:center;
+  align-items:center;
+  font-size:20px;
+  border-bottom: 5px solid #ffffff
+
+}
+.fxicc {
+  display:flex;
+  height:32px;
+  max-height:32px;
+  width:100%;
+}
+.fxiremvbtn {
+  display:flex;
+  background-color:#ad0000;
+  width:10%;
+  justify-content:center;
+  align-items:center;
+  color:#ffffff;
+  font-size:20px;
+  font-weight:bold;
+  
+
+}
+.fxpropc {
+  display:none;
+  width:100%;
+  height:30px;
+  max-height:80px;
+  max-width:100%;
+  background-color:#272727
+}
+.fxproplabel {
+  display:block;
+  justify-content:center;
+  align-items:center;
+  align-content:center;
+  color:#ffffff;
+  border-right: 2px solid #000000;
+  width:30%;
+
+
+}
+.fxpropvalue {
+  display:block;
+  width:70%;
+
+}
+#addeffsel {
+  
+  display:none;
+  flex-direction:row;
+  height:25%
+
+}
+.wrap78 {
+  max-height:80vh;
+  display:flex;
+  flex-direction:column;
+  padding-left:10px;
+  
+
+}
+.mixtrackinst {
+  display:flex;
+  width:100%;
+  max-width:100%;
+  height:50px;
+  max-height:70px;
+}
+#mixtkpn {
+  display:block;
+  width:30%;
+}
+#mixtkpv {
+  display:block;
+  width:70%;
+}
+.topbar {
+  display:flex;
+  width:100vw;
+  height:60px;
+  background-color: #292929;
+  min-width:100%;
+  align-items:center;
+
+}
+.pagelink {
+
+  display:flex;
+  width:170px;
+  height:80%;
+  justify-content:center;
+  align-items:center;
+  text-decoration:none;
+  color:#ffffff;
+  font-size:20px;
+  font-weight:bold;
+  background-color:#000000;
+  margin-left:30px;
+  border: 2px solid white;
+}
+.windowlabel {
+  color:#ffffff;
+  font-size:18px;
+  padding-left:20px;
+  border:1px solid white;
+  display:flex;
+  width:100%;
+  /* max-width:300px; */
+  height:20px;
+}
+#buttonwrapper {
+  width:25vw;
+  background-color:#000000;
+}
+#mfieldwrapper {
+  width:75vw;
+  background-color:#000000;
+  display:flex;
+  flex-direction:row;
+}
+.mparamf {
+  background-color:#000000;
+  color:#ffffff;
+  margin-left:10px;
+
+}
+#mainin-wrapper {
+  width:100vw;
+  min-height:60px;
+  display:flex;
+  flex-direction:row;
+}
+.mfieldlabel {
+  color:#ffffff;
+  font-size:14px;
+}
+.mfieldinfo {
+  display:flex;
+  flex-direction:column;
+  width:25%;
+}
+#wrap4 {
+  display:flex;
+  width:20vw;
+  flex-direction:column;
+  padding-left: 20px;
+}
+#synthbodywrap{
+  display:flex;
+  height:100%;
+  width:100vw;
+
+}
+#wrap5 {
+  width:100%;
+  
+}
 
   </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/topbarstyle.css') }}">
+
 </head>
 <body>
+  <nav class="topbar" id="topbar">
+    <a href="/docs" class="pagelink">Documentation</a>
+    <a href="/" class="pagelink">Synthesizer</a>
+  </nav>
+
+
   <h1 class="titlething">WebLLSE: Browser-Based Low-Level Synthesizer Experiment - <span style="color:red">IN DEVELOPMENT.</span></h1>
-   
-   <div id="presetswb">
+   <div id="synthbodywrap">
+<div id="presetswb" style="display:none">
     <button id="prevpreset" class="presetswi">&lt;</button>
     <select id="currentpreset"></select>
     <button id="nextpreset" class="presetswi">&gt;</button>
@@ -286,8 +507,29 @@
   
   <div id="wrap1">
     <div id="wrap2">
-      <div id="container"></div>
-   <div id="variablecon"></div>
+      <div class="windowlabel">INSTANCES</div>
+      <div id="container" class="leftboxcontainer">
+        <div class="wave-rect" id="wr-prefab">
+          <button class="remove-btn">X</button>
+          <button class="util-btn">E</button>
+          <select class="waveformselect" value="sine"></select>
+          <input class="freqinput waveinp" placeholder="Frequency (Hz)"></input>
+          <input class="ampinput waveinp" placeholder="Amplitude (-1 - 1)"></input>
+          <input class="paninput waveinp" placeholder="Panning (-1 - 1)"></input>
+          <input class="fxcinput waveinp" placeholder="Mixer Track"></input>
+          <button class="addmodbtn">+Modifier</button>
+        </div>
+      </div>
+      <div class="windowlabel">VARIABLES</div>
+    <div id="variablecon" class="leftboxcontainer">
+      <div class="var-rect" id="varr-prefab">
+        <button class="remove-btn">X</button>
+          <button class="util-btn">E</button>
+          <select class="vartypeselect"></select>
+          <input class="var-name-input" placeholder="ID"></input>
+          <input class="var-value-input" placeholder="Value"></input>
+      </div>
+    </div>
     </div>
   <div id="wrap4">
     <div id="wfedit">
@@ -296,36 +538,102 @@
     <div class="label1" id="vallabel2">Amplitude</div>
     <textarea class="cinput1" id="valinput2"></textarea>
    </div>
-<div id="wrap5">
-  <canvas id="modgraphc"></canvas>
-  <div id="wrap6">
+    <div id="wrap5">
+    <canvas id="modgraphc"></canvas>
+    <div id="wrap6">
     <div class="inlbl1">Min:</div>
     <input id="gcmin" class="inin1"></input>
     <div class="inlbl1">Max:</div>
     <input id="gcmax" class="inin1"></input>
 
-  </div>
-</div>
+   </div>
+    </div>
    
    
   </div>
-   
+  <div id="wrap7" class="wrap78">
+    <div class="windowlabel">EFFECT OBJ.</div>
+    <div id="fxcontainer">
+      <div id="fxi1" class="fxinstance">
+        <div id="fxi1cc" class="fxicc">
+          <div id="fxit1" class="fxibodyname">
+          Effect Name Here
+        </div>
+        <button id="fxi1remove" class="fxiremvbtn">
+          X
+        </button>
+        </div>
+        <div id="fxi1prop" class="fxpropc">
+          <div id="fxi1plabel" class="fxproplabel">Property Name</div>
+          <input id="fxi1pvalue" class="fxpropvalue" type="text"></input>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+   <div id="wrap8" class="wrap78">
+    <div class="windowlabel">MIXER</div>
+    
+    <div id="mixtrackcontainer">
+      <div id="mixtrkpre" class="mixtrackinst">
+        <button id="remv" class="fxiremvbtn">
+          X
+        </button>
+        <input id="mixtkpn" class="mixtki" placeholder="ID"></input>
+        <input id="mixtkpe" class="mixtki" placeholder="Effect chain"></input>
+      </div>
+    </div>
+  </div>
    
   </div>
- 
-  
-  <button id="addBtn">+Addend</button>
+
+
+
+   </div>
+   
+
+
+  <div id="mainin-wrapper">
+    <div id="buttonwrapper">
+    <button id="addBtn">+Addend</button>
   <button id="addvar">+Variable</button>
   <button id="addmod" style="display:none">+GraphModulator</button>
+  <button id="addeff">+Effect Object</button>
+  <button id="addmix">+Mixer Track</button>
+  </div>
+  
+  <select id="addeffsel"></select>
   <button id="playBtn" style="display:none">Play</button>
   <button id="startbtn" style="display:none">Load</button>
-  <input class="timeparam" id="timestart" value="0"></input>
-  <input class="timeparam" id="timeend" value="0.5"></input>
-  <input class="specparam" id="blocksize" value="512"></input>
-  <input class="specparam" id="voicenparam" value="1"></input>
+
+  <div id="mfieldwrapper">
+    <div class="mfieldinfo">
+      <div class="mfieldlabel">TIME START:</div>
+    <input class="timeparam mparamf" id="timestart" value="0"></input>
+    </div>
+    <div class="mfieldinfo">
+      <div class="mfieldlabel">TIME END:</div>
+     <input class="timeparam mparamf" id="timeend" value="0.5"></input>
+   </div>
+  <div class="mfieldinfo">
+      <div class="mfieldlabel">BLOCK SIZE:</div>
+    <input class="specparam mparamf" id="blocksize" value="512"></input>
+    </div>
+    <div class="mfieldinfo">
+      <div class="mfieldlabel">MAX VOICES:</div>
+   <input class="specparam mparamf" id="voicenparam" value="1"></input>
+  </div>
+  <select id="addeffsel"></select>
+
+  </div>
+  </div>
+  
+  
    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.11.0/lib/browser/math.js"></script>
   <script src="{{ url_for('static', filename='scripts/client1.js') }}" type="module"></script>
   <script src="{{ url_for('static', filename='audiorun.js') }}" type="module"></script>
+  <script src="{{ url_for('static', filename='effect_modules.js') }}" type="module"></script>
+  
 
   <icon href="tabicon.png" type="image/png"></icon>
   
