@@ -1,4 +1,9 @@
-//WARNING: DO NOT EDIT UNLESS YOU KNOW WHAT YOU ARE DOING.
+/*
+WebLLSE - Web Low Level Synthesizer Experiment
+Designed and built by LP
+
+*/
+
 
 
 const container = document.getElementById("container");
@@ -23,10 +28,65 @@ const nextpresetbtn=document.getElementById("nextpreset");
 const currpresetdd=document.getElementById("currentpreset");
 const modgraphc=document.getElementById("modgraphc");
 const gcmin=document.getElementById("gcmin");
-const gcmax=document.getElementById("gcmax")
+const gcmax=document.getElementById("gcmax");
+const addeff=document.getElementById("addeff");
+const addeffsel=document.getElementById("addeffsel");
+const effinstance=document.getElementById("fxi1");
+const effprop=document.getElementById("fxi1prop");
+const effcont=document.getElementById("fxcontainer")
+const mixtrackinst=document.getElementById("mixtrkpre");
+const addmixb=document.getElementById("addmix");
+const mixtrackcont=document.getElementById("mixtrackcontainer");
+const wrprefab=document.getElementById("wr-prefab");
+const varrprefab=document.getElementById("varr-prefab");
+const exportpbarlabel=document.getElementById("pbarlabel");
+const exportpbarfill=document.getElementById("pbarfill");
+mixtrackinst.style.display="none"
+wrprefab.style.display="none"
+varrprefab.style.display="none"
 
 
 import { generateAudioBuffer} from '../audiorun.js';
+import {module as emodule} from '../effect_modules.js';
+
+
+function setuniqueid(elmt) {
+  let elmts=[elmt,...elmt.querySelectorAll("*")];
+  let counter=0
+  for (let e of elmts) {
+    e.id+=`${(++counter)}`+`${Date.now()}`
+  }
+}
+
+function wait(sec) {
+  return new Promise(resolve => setTimeout(resolve, sec*1000));
+}
+
+function qget(element,q) {
+  return element.querySelector(q)
+}
+function cget(element,name) {
+  return element.querySelector(`[data-name="${name}"]`);
+}
+function getavailablett(tab) {
+  let varph="a"
+      const varpp="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      while (varph in tab) {
+        if (varph.slice(-1)=="z") {
+            varph=varph.slice(0,-1)+"aa"
+        } else {
+            varph=varph.slice(0,-1)+varpp[varpp.indexOf(varph.slice(-1))+1]
+        }
+        
+        
+      }
+  return varph;
+}
+function setexportprogress(label,amt) {
+  exportpbarlabel.innerText=label;
+  exportpbarfill.style.width=`${amt*100}%`
+}
+
 let numvoices=1;
 
 voicentxt.addEventListener('input',function() {
@@ -98,7 +158,7 @@ for (let o=0;o<6;o++) { //Generate the piano keyboard
       console.log(voices)
       if (Object.keys(voices).length>=numvoices) {return;}
       currentnote=12*o+i;
-      keyfrequency[0]=440*2**((currentnote-33)/12)
+      keyfrequency[0]=440*2**((currentnote-33-24)/12)
       notedown=true;
       start2(true,sv);
     }
@@ -180,7 +240,7 @@ fileinp.addEventListener("change",(event)=>{
   const reader=new FileReader()
   reader.onload = function(e) {
     const fileContents = e.target.result;
-    importfromstringdata(fileContents);
+    loadfromjson(fileContents);
   };
   
   reader.readAsText(file)
@@ -202,7 +262,7 @@ function importfromstringdata(stringd) {
     let waved=wave.split("∏")
     console.log(waved)
      let waveform={waveform:waved[0],frequency:waved[1],amplitude:waved[2],phase:waved[3],modifiers:[]}
-   let div=createWaveElement()
+   let div=createWaveElement()[0]
     div.querySelector(".freqinput").value=waveform.frequency;
     div.querySelector(".ampinput").value=waveform.amplitude;
     div.querySelector(".wformselect").value=waveform.waveform;
@@ -351,10 +411,156 @@ function downloadtosynthfile() {
 }
 
 
+function loadfromjson(string) {
+  const json=JSON.parse(string)
+  // waveformdata=json.waveformdata;
+  // variables=json.variables;
+  // effects=json.effects;
+  // mixtracks=json.mixtracks;
+  waveformdata=[]
+  variables={}
+  effects={}
+  mixtracks={}
+  timesttxt.value=json.timestart
+  timeend.value=json.timeend
+  voicentxt.value=json.voices
+  blocksizetxt.value=json.blocksize
+  container.replaceChildren()
+  varcont.replaceChildren()
+  effcont.replaceChildren()
+  mixtrackcont.replaceChildren()
 
+  for (let wave of json.waveformdata) {
+    const e=createWaveElement(wave)
+    const nm=structuredClone(wave.modifiers)
+    e[1].modifiers=[]
+    for (let m of nm) {
+      
+      
+      createModifier(e[0],e[1],"multiply",m)
+      
+    }
+    container.appendChild(e[0])
+  }
+  for (let variable in json.variables) {
+    if (!json.variables.hasOwnProperty(variable)) {continue}
+    varcont.appendChild(addvariable(variable,json.variables[variable]))
+  }
+  for (let eff in json.effects) {
+    if (!json.effects.hasOwnProperty(eff)) {continue}
+    effcont.appendChild(addeffectobj(json.effects[eff].type,eff,json.effects[eff].params))
+  }
+  for (let mt in json.mixtracks) {
+    if (!json.mixtracks.hasOwnProperty(mt)) {continue}
+    mixtrackcont.appendChild(createmixertrack(mt,json.mixtracks[mt]))
+  }
+}
+
+
+async function generatewav(noteval) {
+  console.log("generating wav for note "+noteval)
+  keyfrequency[0]=440*2**((noteval-33-24)/12)
+  let buffer=await generatebuffer(false);
+  buffer=buffer[0]
+
+  const nchannels=buffer.numberOfChannels;
+  const samplerate=buffer.sampleRate;
+  const len=buffer.getChannelData(0).length*nchannels*2+44
+  const wavdata=new ArrayBuffer(len)
+  const view=new DataView(wavdata)
+  function writesd(view,offset,str) {
+    for (let i=0;i<str.length;i++) {
+      view.setUint8(offset+i,str.charCodeAt(i))
+    }
+  }
+  function nto16bpcm(out,offset,inp) {
+    
+      const s=mclamp(inp,-1,1)
+      let h=s*0x7FFF
+      if (s<0) {
+        h=s*0x8000
+      }
+      out.setInt16(offset,h,true)
+      offset+=2;
+      return offset
+  }
+  writesd(view,0,"RIFF")
+  view.setUint32(4,len-8,true)
+  writesd(view,8,"WAVE")
+  writesd(view,12,"fmt ")
+  view.setUint32(16,16,true)
+  view.setUint16(20,1,true)
+  view.setUint16(22,nchannels,true)
+  view.setUint32(24,samplerate,true)
+  view.setUint32(28,samplerate*nchannels*2,true)
+  view.setUint32(32,nchannels*2,true)
+  view.setUint32(34,16,true)
+  writesd(view,36,"data")
+  view.setUint32(40,len-44,true)
+  let offset=44
+
+  
+  
+  for (let i=0;i<buffer.length;i++) {
+    for (let j=0;j<nchannels;j++) {
+      const cdat=buffer.getChannelData(j)
+      offset=nto16bpcm(view,offset,cdat[i])
+
+    }
+   
+  }
+  return new Blob([view],{type:'audio/wav'})
+}
+
+async function downloadtosfz(low,high) {
+  let stdat=`<group>\n`; 
+  setexportprogress("Generating sample set...",0)
+  for (let i=low;i<=high;i++) {
+    const filename=`note${i}.wav`
+    stdat+=`<region> sample=${filename} key=${i} lokey=${i} hikey=${i} lovel=0 hivel=127\n`
+  }
+  await wait(0.1)
+  const zip=new JSZip()
+  zip.file("synth.sfz",stdat)
+  for (let i=low;i<=high;i++) {
+    setexportprogress(`Generating sample ${i-low+1} of ${high-low}`,(i-low)/(high-low));
+    const blob=await generatewav(i)
+    const filename=`note${i}.wav`
+    zip.file(filename,blob)
+    await wait(0.1)
+  }
+  console.log("downloading");
+  
+  setexportprogress("Downloading to ZIP...",1);
+  await wait(0.1)
+  zip.generateAsync({type:'blob'}).then(content=>{
+    const a=document.createElement("a")
+    a.href=URL.createObjectURL(content)
+    a.download="synthexport.zip"
+    a.click()
+  })
+  setexportprogress("Completed",0)
+}
+function downloadjson() {
+  const data={
+    waveformdata:waveformdata,
+    variables:variables,
+    effects:effects,
+    mixtracks:mixtracks,
+    timestart:timesttxt.value,
+    timeend:timeend.value,
+    voices:voicentxt.value,
+    blocksize:blocksizetxt.value,
+  }
+  const sdata=JSON.stringify(data)
+  const a=document.createElement("a")
+  a.href=URL.createObjectURL(new Blob([sdata],{type:'application/json'}))
+  a.download="synth.json"
+  a.click()
+}
 {
-  const options=[["lls1","LLS1 data file"],["wav","WAV audio"],["sfz","SFZ soundfont"],["json","JSON data file"]];
-  const optdesc={"lls1":"Export as synth project data for this site. Can be imported later and edited.","wav":"Render to wave file.","sfz":"Generate a soundfont for this synth to use in a DAW or somewhere else.","json":"Export synth data to JSON. Can be imported later for editing. Functionally similar to LLS, but higher reliability and much higher file size."}
+  const options=[["wav","WAV audio"],["sfz","SFZ soundfont"],["json","JSON data file"]];
+  const optdesc={"lls1":"Export as synth project data for this site. Can be imported later and edited.","wav":"Render to wave file. Good for exporting individual samples.","sfz":"Generate all note samples with an sfz instrument file, to be used in a DAW.","json":"Export synth data to JSON. File can be edited manually or loaded into WebLLSE for editing."}
   options.forEach(o => {
       const op=document.createElement("option");
       op.value=o[0]
@@ -369,7 +575,14 @@ function downloadtosynthfile() {
   exportbtn.onclick=()=>{
     switch(exportsel.value){
       case "lls1":
-        downloadtosynthfile()
+        downloadtosynthfile();
+        break;
+      case "sfz":
+        downloadtosfz(1,127).catch(console.error);
+        break;
+      case "json":
+        downloadjson();
+        break;
     }
   }
 }
@@ -403,7 +616,7 @@ function g_loadinpresets() {
   })
 
 currpresetdd.addEventListener("change",function() {
-  importfromstringdata(presets[currpresetdd.value])
+  loadfromjson(presets[currpresetdd.value])
 })
 
   })
@@ -412,6 +625,79 @@ currpresetdd.addEventListener("change",function() {
   
 }
 g_loadinpresets()
+
+
+
+function addeffectobj(objid,id="",preparams={}) {
+  
+  addeffsel.style.display="none"
+  addeff.style.display="block";
+
+  const cl=effinstance.cloneNode(true)
+  qget(cl,"#fxit1").innerText=emodule.effectparams[objid].label;
+  const ppref=cl.querySelector(".fxpropc")
+  let idn=id || getavailablett(effects);
+  const effectdat={"id":idn,"type":objid,"params":preparams || {}}
+
+  for (let param of emodule.effectparams[objid].params) {
+    console.log(param.name)
+    const pp=ppref.cloneNode(true)
+    const valfield=pp.querySelector("#fxi1pvalue")
+    pp.querySelector("#fxi1plabel").innerText=param.name;
+    valfield.placeholder=param.placeholder || ""
+    pp.style.display="flex"
+    if (param.id==="id") {
+      valfield.value=idn
+      valfield.addEventListener("input",()=>{
+        delete effects[idn]
+        idn=valfield.value;
+        effects[idn]=effectdat;
+        effectdat.id=idn;
+      })
+    } else {
+      effectdat.params[param.id]=preparams[param.id] || param.default || "0"
+      valfield.value=effectdat.params[param.id]
+      valfield.addEventListener("input",()=>{
+
+        effectdat.params[param.id]=valfield.value;
+        console.log("changed fx, new:",effects)
+      })
+    }
+    cl.appendChild(pp)
+    
+  }
+  effects[idn]=effectdat;
+  
+  cl.style.display="flex"
+  cl.querySelector(".fxiremvbtn").addEventListener("click",()=>{
+    effcont.removeChild(cl)
+    delete effects[idn]
+  })
+  return cl
+}
+//add eff
+addeff.addEventListener("click",()=>{
+  addeff.style.display="none";
+  addeffsel.value="SELECT EFFECT TYPE"
+  addeffsel.style.display="block";
+
+})
+addeffsel.addEventListener("change",()=>{
+  const cl=addeffectobj(addeffsel.value)
+  effcont.appendChild(cl);
+
+})
+for (let tk in emodule.effectparams) {
+  if (emodule.effectparams.hasOwnProperty(tk)) {
+    const et=emodule.effectparams[tk]
+    const s=document.createElement("option");
+    s.text=et.label
+    s.value=tk;
+    addeffsel.appendChild(s)
+  }
+  
+
+}
 
 
 
@@ -431,18 +717,16 @@ let mgcanvash;
 let mgcanvasw;
 
 function setupCanvas(canvas) {
-  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  const scale = window.devicePixelRatio || 1;
 
-  // Set canvas width/height to match scaled resolution
-  canvas.width = rect.width * scale;
-  canvas.height = rect.height * scale;
-  mgcanvash=canvas.height
-  mgcanvasw=canvas.width
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = `${rect.width}px`;
+  canvas.style.height = `${rect.height}px`;
 
-  // Scale drawing operations to match CSS pixels
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
 
   return ctx;
 }
@@ -470,6 +754,8 @@ let playing=false
 let gtime=0
 let ltime=0
 let variables={}
+let effects={}
+let mixtracks={}
 
 let mselectedpt=null;
 let mgdragtype=null
@@ -495,15 +781,46 @@ function loadmodcanvas(key,dataw) {
   drawmodcanvas(dat)
 
 }
+// function loadmodcanvas(canvas, ctx, key, dataw, vvalfield) {
+//   const scale = window.devicePixelRatio || 1;
+//   const width = canvas.width / scale;
+//   const height = canvas.height / scale;
+
+//   const pdat = JSON.parse(dataw || '{"mainpoints":[{"x":0,"y":0},{"x":1,"y":1}],"segments":[],"min":0,"max":10}');
+//   const dat = datadenormal(pdat, width, height);
+
+//   vvalfield.value = "g!" + JSON.stringify(datanormal(dat, width, height));
+//   variables[key] = vvalfield.value;
+
+//   return {
+//     modvar: key,
+//     moddata: dat,
+//     vvalfield: vvalfield
+//   };
+// }
+
+
+
+
+
 
 function getmousepos(e) {
   const rect = modgraphc.getBoundingClientRect();
-  const sc=window.devicePixelRatio||1
+  const sc = window.devicePixelRatio || 1;
   return {
-    x: e.clientX - rect.left*sc,
-    y: e.clientY - rect.top*sc
+    x: (e.clientX - rect.left) * sc,
+    y: (e.clientY - rect.top) * sc
   };
 }
+
+// function getmousepos(canvas, e) {
+//   const rect = canvas.getBoundingClientRect();
+//   const sc = window.devicePixelRatio || 1;
+//   return {
+//     x: (e.clientX - rect.left) * sc,
+//     y: (e.clientY - rect.top) * sc
+//   };
+// }
 
 
 
@@ -599,6 +916,76 @@ function updsegments() {
     currentmvtab.segments.push({p0,p1,c0:{"x":mclamp(p0.x+d,p0.x,p1.x),"y":p0.y},c1:{"x":mclamp(p1.x-d,p0.x,p1.x),"y":p1.y}})
   }
 }
+// function updsegments(state) {
+//   const points = state.moddata.mainpoints;
+//   const segments = [];
+//   for (let i = 0; i < points.length - 1; i++) {
+//     const p0 = points[i];
+//     const p1 = points[i + 1];
+//     const d = (p1.x - p0.x) / 2.5;
+//     segments.push({
+//       p0,
+//       p1,
+//       c0: { x: mclamp(p0.x + d, p0.x, p1.x), y: p0.y },
+//       c1: { x: mclamp(p1.x - d, p0.x, p1.x), y: p1.y }
+//     });
+//   }
+//   state.moddata.segments = segments;
+// }
+
+
+// function drawmodcanvas(ctx, canvas, state) {
+//   const scale = window.devicePixelRatio || 1;
+//   const width = canvas.width / scale;
+//   const height = canvas.height / scale;
+
+//   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+//   const segments = state.moddata.segments;
+//   const normed = datanormal(state.moddata, width, height);
+//   const jss = JSON.stringify(normed);
+//   variables[state.modvar] = "g!" + jss;
+//   state.vvalfield.value = "g!" + jss;
+
+//   // Draw curves
+//   for (let seg of segments) {
+//     ctx.beginPath();
+//     ctx.moveTo(seg.p0.x, seg.p0.y);
+//     ctx.bezierCurveTo(seg.c0.x, seg.c0.y, seg.c1.x, seg.c1.y, seg.p1.x, seg.p1.y);
+//     ctx.strokeStyle = 'white';
+//     ctx.lineWidth = 2;
+//     ctx.stroke();
+//   }
+
+//   // Draw handles
+//   ctx.strokeStyle = 'gray';
+//   for (let seg of segments) {
+//     ctx.beginPath();
+//     ctx.moveTo(seg.p0.x, seg.p0.y);
+//     ctx.lineTo(seg.c0.x, seg.c0.y);
+//     ctx.moveTo(seg.p1.x, seg.p1.y);
+//     ctx.lineTo(seg.c1.x, seg.c1.y);
+//     ctx.stroke();
+//   }
+
+//   // Draw control points
+//   for (let seg of segments) {
+//     [seg.c0, seg.c1].forEach(cp => {
+//       ctx.beginPath();
+//       ctx.arc(cp.x, cp.y, 5, 0, Math.PI * 2);
+//       ctx.fillStyle = 'white';
+//       ctx.fill();
+//     });
+//   }
+
+//   // Draw main points
+//   for (let p of state.moddata.mainpoints) {
+//     ctx.beginPath();
+//     ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+//     ctx.fillStyle = ([0, width].includes(p.x)) ? 'yellow' : 'blue';
+//     ctx.fill();
+//   }
+// }
 
 function drawmodcanvas(datas) {
   gctx.clearRect(0, 0, modgraphc.width, modgraphc.height);
@@ -680,8 +1067,36 @@ gcmax.addEventListener("input",()=>{
   }
 })
 
+function createmixertrack(id="",chain="") {
+  let idn=id || getavailablett(mixtracks)
+  const inst=mixtrackinst.cloneNode(true)
+  const idf=inst.querySelector("#mixtkpn");
+  const vaf=inst.querySelector("#mixtkpe");
+  const rem=inst.querySelector("#remv");
+  idf.value=idn;
+  mixtracks[idn]="";
+  vaf.value=chain;
+  idf.addEventListener("input",( ) =>{
+    delete mixtracks[idn];
+    idn=idf.value;
+    mixtracks[idn]=vaf.value;
+  })
+  vaf.addEventListener("input",()=>{
+    mixtracks[idn]=vaf.value;
+  })
+  rem.addEventListener("click",()=>{
+    mixtrackcont.removeChild(inst);
+    delete mixtracks[idn];
+  })
+  inst.style.display="flex"
+  return inst
+}
 
+addmixb.addEventListener("click",()=>{
+  const inst=createmixertrack()
+  mixtrackcont.appendChild(inst);
 
+})
 
 
 
@@ -790,24 +1205,22 @@ setInterval(() => {
 
     let audioCtx = null;
     let activeNodes = [];
-    function createWaveElement() {
 
-        const wavepoint={waveform:"sine",frequency: "440", amplitude: "0.1", pan:"0",phase:"0",modifiers: []}
+
+
+    function createWaveElement(prewavepoint={waveform:"sine",frequency: "440", amplitude: "0.1", pan:"0",phase:"0",fxchain:"",mixtrack:"",modifiers: []}) {
+
+      const wavepoint=structuredClone(prewavepoint)
         waveformdata.push(wavepoint)
-      const div = document.createElement("div");
+      const div = wrprefab.cloneNode(true);
       div.className = "wave-rect";
 
-      const freqInput = document.createElement("input");
-      // freqInput.type = "number";
-      freqInput.placeholder = "Frequency (Hz)";
-      freqInput.className="freqinput waveinp"
-      // freqInput.min = "1";
-      // freqInput.step = "1";
-      freqInput.value = "440";
-      const paninput=document.createElement("input");
-      paninput.placeholder="Panning (-1 - 1)"
-      paninput.className="paninput waveinp"
-      paninput.value="0"
+      const freqInput = qget(div,".freqinput")
+      freqInput.value = wavepoint.frequency;
+      const paninput=qget(div,".paninput")
+      paninput.value=wavepoint.pan
+      const fxcinput=qget(div,".fxcinput")
+      fxcinput.value=wavepoint.mixtrack
     freqInput.addEventListener("input", function () {
         wavepoint.frequency=freqInput.value;
         if (selectedwrect===div) {
@@ -815,14 +1228,11 @@ setInterval(() => {
         }
     });
         
-      const ampInput = document.createElement("input");
-      // ampInput.type = "number";
-      ampInput.placeholder = "Amplitude (0-1)";
-      ampInput.className="ampinput waveinp"
+      const ampInput = qget(div,".ampinput")
       // ampInput.min = "0";
       // ampInput.max = "1";
       // ampInput.step = "0.01";
-      ampInput.value = "0.1";
+      ampInput.value = wavepoint.amplitude;
          ampInput.addEventListener("input", function () {
         wavepoint.amplitude=ampInput.value;
         if (selectedwrect===div) {
@@ -832,17 +1242,16 @@ setInterval(() => {
     paninput.addEventListener("input",()=>{
       wavepoint.pan=paninput.value;
     })
-      const removeBtn = document.createElement("button");
-      removeBtn.className = "remove-btn";
-      removeBtn.innerText = "X";
-      const utilbtn = document.createElement("button");
-      utilbtn.className = "util-btn";
-      utilbtn.innerText = "E";
-      const addmod=document.createElement("button");
-      addmod.className="addmodbtn";
-      addmod.innerText="+Modifier";
-        const waveform=document.createElement("select");   
+    fxcinput.addEventListener("input",()=>{
+      wavepoint.mixtrack=fxcinput.value;
+      //console.log(wavepoint.fxchain)
+    })
+      const removeBtn = qget(div,".remove-btn")
+      const utilbtn = qget(div,".util-btn")
+      const addmod=qget(div,".addmodbtn")
+        const waveform=qget(div,".waveformselect")   
         waveform.className="wformselect"
+        
         const options=[["sine","Sine"],["sawtooth","Sawtooth"],["square","Square"],["triangle","Triangle"],["whitenoise","White noise"]];
         options.forEach(o => {
             const op=document.createElement("option");
@@ -850,6 +1259,7 @@ setInterval(() => {
             op.text=o[1]
             waveform.appendChild(op)
         })
+        waveform.value=wavepoint.waveform
         waveform.addEventListener("change",function() {
             const val=this.value;
             wavepoint.waveform=val;
@@ -860,13 +1270,7 @@ setInterval(() => {
         container.removeChild(div);
         waveformdata.splice(waveformdata.indexOf(wavepoint),1);
       }
-        div.appendChild(removeBtn);
-        div.appendChild(utilbtn);
-        div.appendChild(waveform);
-      div.appendChild(freqInput);
-      div.appendChild(ampInput);
-      div.appendChild(paninput)
-      div.appendChild(addmod)
+        
       addmod.onclick=() => {
         createModifier(div,wavepoint,"multiply");
       }
@@ -881,54 +1285,41 @@ setInterval(() => {
         propinput1.value=wavepoint.frequency;
         propinput2.value=wavepoint.amplitude;
       }
+      div.style.display="flex"
       
-      return div;
+      return [div,wavepoint];
     }
 
-    function addvariable() {
-          const div = document.createElement("div");
-      div.className = "var-rect";
-      let varph="a"
-      const varpp="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-      while (varph in variables) {
-        if (varph.slice(-1)=="z") {
-            varph=varph.slice(0,-1)+"aa"
-        } else {
-            varph=varph.slice(0,-1)+varpp[varpp.indexOf(varph.slice(-1))+1]
-        }
-        
-        
-      }
-      const remove = document.createElement("button");
-      remove.className = "remove-btn";
-      remove.innerText = "X";
-        const vname=document.createElement("input")
-        vname.type="text"
-        vname.className="var-name-input"
+    function addvariable(preid=getavailablett(variables),preval="") {
+      const varph=preid;
+          const div = varrprefab.cloneNode(true)
+      
+      const remove = qget(div,".remove-btn")
+        const vname=qget(div,".var-name-input")
         vname.value=varph
 
-        const vvalue=document.createElement("input");
-        vvalue.type="text"
-        vvalue.className="var-value-input"
-        vvalue.value="1"
-        const editbtn = document.createElement("button");
-      editbtn.className = "util-btn";
-      editbtn.innerText = "E";
+        const vvalue=qget(div,".var-value-input")
+        vvalue.value=preval
+        const editbtn = qget(div,".util-btn")
       editbtn.style.display="none"
-        const vtype=document.createElement("select");
+        const vtype=qget(div,".vartypeselect")
         const vo1=document.createElement("option");
         vo1.value="expression"
         vo1.text="Expression"
         const vo2=document.createElement("option");
         vo2.value="modulator"
         vo2.text="Graphed Mod"
+        const vo3=document.createElement("option");
+        vo3.value="fxchain"
+        vo3.text="Effect Chain"
+        
         vtype.value="expression"
         div.dataset.info=""
         vtype.addEventListener("change",()=>{ 
           const inf=div.dataset.info;
             div.dataset.info=vvalue.value;
             vvalue.value=inf;
-          if (vtype.value=="expression") {
+          if (vtype.value!="modulator") {
             editbtn.style.display="none"
             
           } else {
@@ -938,17 +1329,21 @@ setInterval(() => {
             }
             
           }
+          if (vtype.value=="fxchain") {
+            if (!inf || inf.slice(0,2)!="e!") {
+              vvalue.value="e!"+vvalue.value;
+            }
+          }
+
         })
         
 
-        variables[varph]="1"
-        div.appendChild(remove);
-        div.appendChild(editbtn);
-        div.appendChild(vname);
-        div.appendChild(vvalue);
-        div.appendChild(vtype)
+        variables[varph]=preval
+        
         vtype.appendChild(vo1);
         vtype.appendChild(vo2);
+        vtype.appendChild(vo3);
+       
         vname.dataset.originalvalue=varph
         vname.addEventListener("input",function() {
             delete variables[vname.dataset.originalvalue];
@@ -963,7 +1358,10 @@ setInterval(() => {
             const inf=vvalue.value;
             const b1=inf && inf.slice(0,2)=="g!"
             const b2=vtype.value=="modulator"
-            if (b1!=b2) {
+
+            const b3=inf && inf.slice(0,2)=="e!"
+            const b4=vtype.value=="fxchain"
+            if (b1!=b2 || b3!=b4) {
               vvalue.value=tv;
             }
             tempv=vvalue.value;
@@ -977,32 +1375,50 @@ setInterval(() => {
          }
          div.classList.add("selectedWE");
         })
+    //chatgpt
+//    editbtn.addEventListener("mousedown", () => {
+//   const popup = window.open("/gmodedit", "modeditor", "width=800,height=600");
+
+//   // Pass data to popup safely
+//   popup.__modEditorData__ = {
+//     key: vname.value,
+//     data: vvalue.value.slice(2),
+//     vvalfield: vvalue
+//   };
+// });
+
+//end chatgpt
+
+
         remove.onclick=function () {
             varcont.removeChild(div);
             delete variables[varph];
         }
+        div.style.display="flex"
         return div
+        
     }
 
 
-    function createModifier(element,wave,typeo) {
+    function createModifier(element,wave,typeo,preprops={type: typeo,start: "0", end: "10", step: "1", var: getavailablett(variables)}) {
 
       const div = document.createElement("div");
       div.className = "wr-modifier";
-      const mod={type: typeo,start: "0", end: "10", step: "1", var: "a"}
+      const varp=preprops.var;
+      const mod=structuredClone(preprops)
         wave.modifiers.push(mod)
       const fromtx = document.createElement("input");
       fromtx.type = "text";
       fromtx.placeholder = "From";
       fromtx.className="mfromtx"
-      fromtx.value = "0";
+      fromtx.value = mod.start;
 
       const totx = document.createElement("input");
       totx.type = "text";
       totx.placeholder = "To";
       totx.className="mtotx"
       
-      totx.value = "10";
+      totx.value = mod.end;
          const steptx = document.createElement("input");
       steptx.type = "text";
       steptx.placeholder = "Step";
@@ -1010,16 +1426,16 @@ setInterval(() => {
       const vartx=document.createElement("input");
       vartx.type="text";
       vartx.placeholder="Var";
-      vartx.value="a"
+      vartx.value=varp;
       vartx.className="mvartx"
-      steptx.value = "1";
+      steptx.value = mod.step;
       const removeBtn = document.createElement("button");
       removeBtn.className = "remove-btn";
       removeBtn.innerText = "X";
       removeBtn.onclick = () => {
         element.removeChild(div);
-        wave.modifiers.splice(wave.modifiers.indexOf(mod),1);
-
+        //wave.modifiers.splice(wave.modifiers.indexOf(mod),1);
+        wave.modifiers = wave.modifiers.filter(m => m.var !== mod.var);
       }
         div.appendChild(removeBtn);
       div.appendChild(fromtx);
@@ -1052,7 +1468,7 @@ setInterval(() => {
       return div;
     }
     addBtn.onclick = () => {
-      container.appendChild(createWaveElement());
+      container.appendChild(createWaveElement()[0]);
     };
     addvarb.onclick=()=>{
         varcont.appendChild(addvariable())
@@ -1094,18 +1510,28 @@ let buffercache=null
 let bufferstart=0
 let bufferend=0
 let pphases=[]
-export async function start2(play=false,idx=0) {
-    if (!audioContext) {
+
+export async function generatebuffer(play=false,idx=0) {
+  if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     const startTime = Number(timesttxt.value);
     const endTime = Number(timeend.value);
     console.log(waveformdata)
+   
+  const effects2 = structuredClone(effects);
+console.log("EFFECTS BEFORE GENERATE:", effects2);
 
-   let buffer=await generateAudioBuffer(audioContext, startTime, endTime,waveformdata,variables,Number(blocksizetxt.value),pphases)
+   let buffer=generateAudioBuffer(audioContext, startTime, endTime,waveformdata,variables,Number(blocksizetxt.value),pphases,effects2,mixtracks)
+   return buffer
+}
+
+export async function start2(play=false,idx=0) {
+    let buffer=await generatebuffer(play,idx)
     buffercache = buffer[0];
-
+const startTime = Number(timesttxt.value);
+    const endTime = Number(timeend.value);
     bufferstart=startTime;
     bufferend=endTime;
     pphases=buffer[1]
@@ -1123,7 +1549,7 @@ export async function start2(play=false,idx=0) {
 }
 startBtn.onclick=()=>{
   console.log(waveformdata);
-  start2();
+  start2(true);
 }
 
 
@@ -1159,3 +1585,4 @@ playBtn.onmouseup = playBtn.onmouseleave = playBtn.ontouchend = () => {
   
   
 };
+export {variables}
