@@ -258,7 +258,7 @@
 }
 #exportdesc {
   color:#fff;
-  max-width:100px;
+  max-width:30vw;
 }
 .filebtn {
   height:10%
@@ -280,7 +280,9 @@
 #presetswb {
   display: flex;
   float:right;
-
+  width:20%;
+  height:20%;
+  padding-left:20px;
 }
 #modgraphc {
   display: flex;
@@ -484,7 +486,25 @@
   width:100%;
   
 }
-
+#pbarwrap {
+  width:20%;
+  height:20%;
+}
+#pbarlabel {
+  width:100%;
+  height:40%;
+  color:white;
+}
+#pbarbg {
+  width:100%;
+  height:60%;
+  border: 2px solid white;
+}
+#pbarfill {
+  height:100%;
+  width:0%;
+  background-color:#ff0000;
+}
   </style>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/topbarstyle.css') }}">
 
@@ -498,12 +518,7 @@
 
   <h1 class="titlething">WebLLSE: Browser-Based Low-Level Synthesizer Experiment - <span style="color:red">IN DEVELOPMENT.</span></h1>
    <div id="synthbodywrap">
-<div id="presetswb" style="display:none">
-    <button id="prevpreset" class="presetswi">&lt;</button>
-    <select id="currentpreset"></select>
-    <button id="nextpreset" class="presetswi">&gt;</button>
 
-  </div>
   
   <div id="wrap1">
     <div id="wrap2">
@@ -628,7 +643,7 @@
   </div>
   </div>
   
-  
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.11.0/lib/browser/math.js"></script>
   <script src="{{ url_for('static', filename='scripts/client1.js') }}" type="module"></script>
   <script src="{{ url_for('static', filename='audiorun.js') }}" type="module"></script>
@@ -641,7 +656,7 @@
  
 </div>
 <div id="exportoption">
-  <div id="wrap3" style="width:80%;height:100%">
+  <div id="wrap3" style="width:40%;height:100%">
 <div id="exportlb">File</div>
   <select id="exportselect"></select>
   <div id="exportdesc">Select</div>
@@ -649,10 +664,23 @@
   </div>
   <button id="exportbtn" class="filebtn">Export</button>
   <button id="importbtn" class="filebtn">Import</button>
+  <div id="pbarwrap">
+    <div id="pbarlabel">Progress</div>
+    <div id="pbarbg">
+      <div id="pbarfill"></div>
+    </div>
+    
+  </div>
+  <div id="presetswb" >
+    <button id="prevpreset" class="presetswi">&lt;</button>
+    <select id="currentpreset"></select>
+    <button id="nextpreset" class="presetswi">&gt;</button>
+
+  </div>
   
 </div>
 
-<input type="file" id="fileimport" style="display:none;" accept=".lls1"></input>
+<input type="file" id="fileimport" style="display:none;" accept=".json"></input>
 
 
 </body>
